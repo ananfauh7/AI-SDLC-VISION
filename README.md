@@ -23,53 +23,79 @@ This ensures **humans set intent and enforce governance**, while **AI agents han
 
 ---
 
-## Jira Story Format for AI-First Development
+## Example Requirement Walkthrough
 
-For AI agents to deliver reliable code, **stories must be machine-consumable** while still readable by humans. A standardized Jira format ensures this:  
+### **Step 1: Requirement from BA (Human)**  
+_Business Requirement:_  
+> Customers should be able to view their recent transactions in the banking app, showing the last 10 debits and credits with date, description, and amount.  
 
-### **Jira Story Template**  
+---
 
+### **Step 2: Jira Agent Creates Story**  
 **Story Title:**  
-_As a [role], I want [functionality], so that [business value]._  
+_As a banking customer, I want to view my last 10 transactions so that I can track my recent account activity._  
 
 **Description:**  
-- **Business Context:** Why this feature is needed.  
-- **Functional Requirements:** Clear bullet points with no ambiguity.  
-- **Non-Functional Requirements:** Performance, security, scalability expectations.  
+- Display last 10 transactions (date, description, amount).  
+- Support both debit and credit transactions.  
+- Must refresh in real-time when the customer logs in.  
 
-**Acceptance Criteria (Gherkin / BDD Style):**  
+**Acceptance Criteria:**  
 ```
-Given [precondition]  
-When [action occurs]  
-Then [expected outcome]
+Given a logged-in customer  
+When they open the transactions page  
+Then the system should display their last 10 transactions (date, description, amount)  
 ```
 
 **Test Validation Requirements:**  
-- Unit tests must cover at least 80% of new code.  
-- Include edge cases such as [list of specific scenarios].  
-- Negative test cases to validate system resilience.  
-- Automated test output should link back to acceptance criteria IDs.  
+- Verify exactly 10 transactions are shown.  
+- Validate ordering by most recent first.  
+- Edge case: Fewer than 10 transactions → display available ones.  
+- Response time must be < 2 seconds for 95% of requests.  
 
-**Granularity of Requirements:**  
-- Each story must be **atomic** (deliverable within a sprint or less).  
-- Large requirements are split into multiple stories.  
-- Dependencies between stories are explicitly defined.  
+---
 
-**Example Jira Story:**  
+### **Step 3: Developer Agent Generates Code**  
+- Creates a new GitHub branch: `feature/transaction-history`.  
+- Generates API endpoint `/transactions/recent`.  
+- Implements query logic:  
+  ```sql
+  SELECT date, description, amount
+  FROM transactions
+  WHERE customer_id = :id
+  ORDER BY date DESC
+  LIMIT 10;
+  ```  
+- Creates UI component `RecentTransactionsList` in React/Angular/Flutter (language-specific).  
+- Commits code with message: _“Add endpoint + UI for last 10 transactions”_.  
 
-- **Title:** _As a customer, I want to reset my password so that I can regain access to my account._  
-- **Description:** Password reset should be available via email verification.  
-- **Acceptance Criteria:**  
-  - **Given** a registered user with a valid email,  
-    **When** they request a password reset,  
-    **Then** an email with a reset link should be sent.  
-  - **Given** an expired reset link,  
-    **When** the user clicks on it,  
-    **Then** the system should reject it with an appropriate error message.  
-- **Test Validation:**  
-  - Unit tests for link generation, email delivery, and token expiration.  
-  - Negative test: Invalid email request should not trigger an email.  
-  - Performance: Reset email should be sent within 5 seconds in 95% of cases.  
+---
+
+### **Step 4: Unit Testing Agent Writes Tests**  
+- **Unit Tests:**  
+  - Fetch 10 records for a user with >10 transactions.  
+  - Fetch all records for a user with <10 transactions.  
+  - Validate ordering (most recent first).  
+  - Validate empty state message for users with no transactions.  
+- **Integration Test:**  
+  - API response returns JSON with fields `date, description, amount`.  
+- **Performance Test Stub:**  
+  - Ensure API responds within SLA (2 seconds).  
+
+---
+
+### **Step 5: CI/CD Agent Executes Pipeline**  
+- Runs static code analysis and linting.  
+- Executes all unit tests and integration tests.  
+- Generates code coverage report (target: 85%+).  
+- Publishes deployment preview for QA Lead to validate.  
+
+---
+
+### **Step 6: Human Gatekeeper Review**  
+- **Tech Lead:** Reviews API logic and UI rendering for compliance with security and coding standards.  
+- **QA Lead:** Validates that test coverage matches acceptance criteria and business requirement.  
+- **Product Owner:** Signs off once preview matches customer experience expectations.  
 
 ---
 
@@ -77,14 +103,14 @@ Then [expected outcome]
 
 ```mermaid
 flowchart LR
-    BA[Business Analyst] -->|Requirements| JiraAgent[Jira AI Agent]
-    JiraAgent --> Stories[Jira Stories w/ Acceptance Criteria]
-    Stories --> DevAgent[Developer Agents]
+    BA[Business Analyst] -->|Requirement| JiraAgent[Jira AI Agent]
+    JiraAgent --> Stories[Jira Story]
+    Stories --> DevAgent[Developer Agent]
     DevAgent -->|Branch + Code| GitHub[GitHub Repo]
     DevAgent -->|Commit| UnitTestAgent[Unit Testing Agent]
     UnitTestAgent --> Tests[Automated Test Cases]
     Tests --> CICDAgent[CI/CD Agent]
-    CICDAgent --> Reports[Test Reports + Code Quality]
+    CICDAgent --> Reports[Test Reports + Coverage]
     CICDAgent --> HumanReview[Human Gatekeepers]
     HumanReview -->|Approve| Merge[Code Merged & Released]
 ```
