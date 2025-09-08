@@ -110,6 +110,7 @@ flowchart LR
     DevAgent -->|Commit| UnitTestAgent[Unit Testing Agent]
     UnitTestAgent --> Tests[Automated Test Cases]
     Tests --> CICDAgent[CI/CD Agent]
+    GitHub --> CICDAgent[CI/CD Agent]
     CICDAgent --> Reports[Test Reports + Coverage]
     CICDAgent --> HumanReview[Human Gatekeepers]
     HumanReview -->|Approve| Merge[Code Merged & Released]
